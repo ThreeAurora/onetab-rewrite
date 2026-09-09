@@ -1,0 +1,215 @@
+/* list.css — 全局只有两条铁律：每行 1 个 DOM 节点、行内不引入 position:absolute。
+   图标走 background-image（C3），删除叉与折叠箭头都是伪元素（零 DOM 节点）。 */
+
+:root {
+  --row-h: 26px;
+  --accent: #2563eb;
+  --hl-bg: #e8f0fe;
+  --hover-bg: #f2f4f7;
+  --text: #1f2937;
+  --dim: #6b7280;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font: 13px/1.4 "Segoe UI", system-ui, "Microsoft YaHei", sans-serif;
+  color: var(--text);
+  background: #fff;
+}
+
+body { display: flex; flex-direction: column; }
+
+/* ---------- 工具栏 ---------- */
+
+#toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+#search {
+  flex: 1 1 220px;
+  min-width: 160px;
+  max-width: 460px;
+  padding: 4px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+  outline: none;
+}
+#search:focus { border-color: var(--accent); }
+
+#toolbar button {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#toolbar button:hover { background: var(--hover-bg); border-color: #9ca3af; }
+
+#stats {
+  margin-left: auto;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+/* ---------- 列表视口 ---------- */
+
+#viewport {
+  flex: 1 1 auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* 行：单一节点。display:block + 固定行高（C7），ellipsis 防换行（K8）。
+   contain:layout paint 把每行的重排/重绘圈在自己内部。
+   背景分量逐项写死，行内 style.backgroundImage 只覆盖 image 一项。 */
+.row {
+  display: block;
+  height: var(--row-h);
+  line-height: var(--row-h);
+  padding-inline: 28px 26px;
+  background-color: transparent;
+  background-position: 7px center;
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  color: var(--text);
+  contain: layout paint;
+  cursor: default;
+}
+
+a.row { cursor: pointer; }
+
+a.row:hover { background-color: var(--hover-bg); }
+
+/* 悬停删除叉：伪元素，不占 DOM 节点；float 右侧，不用 absolute（C4） */
+a.row::after {
+  content: '\00d7';
+  float: right;
+  width: 18px;
+  margin-right: -24px;
+  text-align: center;
+  color: var(--dim);
+  font-weight: 700;
+  visibility: hidden;
+}
+a.row:hover::after { visibility: visible; }
+a.row:hover::after:hover { color: #dc2626; }
+
+/* ---------- 分组行 ---------- */
+
+.group-row {
+  font-weight: 600;
+  background-color: #eef2f7;
+  border-top: 1px solid #e5e7eb;
+  padding-inline: 24px 12px;
+  user-select: none;
+}
+.group-row::before {
+  content: '\25BE';
+  display: inline-block;
+  width: 14px;
+  margin-left: -16px;
+  color: var(--dim);
+}
+.group-row.collapsed::before { content: '\25B8'; }
+.group-row:hover { background-color: #e4eaf2; }
+
+.trash-row { background-color: #f3f4f6; color: var(--dim); }
+.trash-row:hover { background-color: #eceef1; }
+
+.tab-in-trash { color: var(--dim); }
+
+/* 搜索结果信息行 */
+.info-row { color: var(--dim); font-style: italic; background: #fbfbfc; }
+
+/* 键盘高亮 */
+.row.hl { background-color: var(--hl-bg); outline: 1px solid var(--accent); outline-offset: -1px; }
+a.row.hl:hover { background-color: var(--hl-bg); }
+
+/* ---------- 右键菜单（常驻单节点容器，打开时动态填充） ---------- */
+
+#ctxmenu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 200px;
+  padding: 4px 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+  font-size: 13px;
+}
+.ctx-item { padding: 6px 16px; cursor: pointer; white-space: nowrap; }
+.ctx-item:hover { background: var(--hl-bg); }
+.ctx-item.danger { color: #dc2626; }
+.ctx-sep { border-top: 1px solid #e5e7eb; margin: 4px 0; }
+
+/* ---------- 对话框 / Toast ---------- */
+
+#dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, .25);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 30vh;
+}
+#dialog-box {
+  width: 380px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .18);
+  padding: 16px;
+}
+#dialog-title { font-weight: 600; margin-bottom: 10px; }
+#dialog-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+  outline: none;
+}
+#dialog-input:focus { border-color: var(--accent); }
+#dialog-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+#dialog-btns button {
+  padding: 5px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+#dialog-ok { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+#toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1200;
+  max-width: 420px;
+  padding: 8px 14px;
+  background: #111827;
+  color: #f9fafb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>OneTab Rewrite</title>
+  <link rel="stylesheet" href="list.css">
+</head>
+<body>
+  <header id="toolbar">
+    <input id="search" type="search" placeholder="搜索标题或 URL（按 / 聚焦，Esc 清空）" spellcheck="false" autocomplete="off">
+    <button id="btn-save-window" title="保存当前窗口全部标签页">保存当前窗口</button>
+    <button id="btn-save-all" title="保存所有窗口的全部标签页">保存所有窗口</button>
+    <button id="btn-new-group" title="新建空分组">＋分组</button>
+    <button id="btn-import" title="从官方 OneTab 导出文件导入">导入</button>
+    <button id="btn-export-text" title="导出全部 URL（不含回收站）">导出文本</button>
+    <button id="btn-export-json" title="导出完整 JSON 备份（含回收站与分组）">导出备份</button>
+    <span id="stats"></span>
+  </header>
+
+  <main id="viewport"></main>
+
+  <div id="ctxmenu" hidden></div>
+
+  <div id="dialog" hidden>
+    <div id="dialog-box">
+      <div id="dialog-title">重命名分组</div>
+      <input id="dialog-input" type="text" spellcheck="false">
+      <div id="dialog-btns">
+        <button id="dialog-cancel">取消</button>
+        <button id="dialog-ok">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <input id="import-file" type="file" accept=".txt,.json,.text" hidden>
+  <div id="toast" hidden></div>
+
+  <script type="module" src="list.js"></script>
+</body>
+</html>
