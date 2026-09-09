@@ -42,6 +42,24 @@
 完整证据链（trace 分析、干预实验、排除项）见 **[docs/diagnostics/findings.md](./docs/diagnostics/findings.md)**，
 复现脚本在 `docs/diagnostics/` 下。
 
+### 那旧版呢？旧版其实更快，只是装不上了
+
+上面那张表里 0.50 ms 的一行，就是旧版（2.0 之前）的 DOM 形态——每行一个裸 `<a>`，又快又好用。
+问题出在时代：**旧版是 MV2 扩展，而 Edge 152 与现代 Chrome 已经停用 MV2**。商店里能装到的只剩
+为适配 MV3 重写过的 2.x，而那次重写顺手把渲染做坏了（数据层搬进 service worker、列表改由多层
+嵌套节点拼装）。
+
+同类里 [OneTab-Reborn](https://github.com/Nuzza/OneTab-Reborn) 复刻的正是这个好用的旧版，
+但它的 manifest 同样是 `manifest_version: 2`——在现在的 Edge / Chrome 上根本加载不了，
+只能跑在仍支持 MV2 的 Firefox ESR 一类环境里。
+
+所以本项目想做的不是"比旧版更好"，而是：**把旧版那套渲染纪律（每行一个节点、不做花活）
+重新搬回 MV3**，再补一层旧版也没有的虚拟滚动。
+
+> 口径说明：0.50 ms 这一行是按旧版 DOM 形态合成的基准（`dom_bench.html`），不是实测旧版 OneTab
+> 本体——它已经装不上了。合成基准的意义在于排除 favicon、脚本逻辑等干扰，只看 DOM 形态这一
+> 个变量的代价。
+
 ## 本项目的做法
 
 | 约束 | 落地方式 |
@@ -108,7 +126,7 @@ chrome-extension://<扩展ID>/src/list.html?stress=100000
 | [better-onetab](https://github.com/cnwangjie/better-onetab) | 1.7k★ **已归档** | Vue，功能派（同步/配置/拖拽），2018 年后停更 |
 | [N-Tab](https://github.com/scoful/N-Tab) | 0.9k★ 活跃 | 中文，功能派，Chrome/Edge |
 | [NiceTab](https://github.com/web-dahuyou/NiceTab) | 0.75k★ 活跃 | TS/React，目前功能最全（同步、主题、多格式导入、拖拽排序） |
-| [OneTab-Reborn](https://github.com/Nuzza/OneTab-Reborn) | 21★ | 旧版 OneTab（pre-2.0）的 UI 改版 fork |
+| [OneTab-Reborn](https://github.com/Nuzza/OneTab-Reborn) | 21★ | 复刻的正是更好用的旧版（pre-2.0）——但它是 `manifest_version: 2`，现代 Chrome / Edge 已无法加载 |
 | [onetab (反混淆版)](https://github.com/AltarBeastiful/onetab) | 58★ | 官方代码反混淆 + 补快捷键 |
 
 本项目的取舍很清楚：

@@ -44,6 +44,24 @@ A control experiment says it best (same entry count, different DOM shapes, `elem
 Full evidence (trace analysis, intervention experiments, ruled-out hypotheses):
 **[docs/diagnostics/findings.md](./docs/diagnostics/findings.md)**, with reproduction scripts alongside it.
 
+### What about the old version? It was faster — it just cannot be installed anymore
+
+The 0.50 ms row above is the old (pre-2.0) DOM shape: one bare `<a>` per row. It was both fast and pleasant
+to use. The problem is chronological: **the old build is Manifest V2, and Edge 152 / modern Chrome have
+disabled MV2**. Everything installable from the store today is a 2.x rewritten for MV3 — and that rewrite
+is what broke rendering (data moved into a service worker, rows rebuilt from nested positioned nodes).
+
+[OneTab-Reborn](https://github.com/Nuzza/OneTab-Reborn) recreates that good old version, but its manifest
+is `manifest_version: 2` as well: it simply will not load on current Edge or Chrome, only on environments
+that still allow MV2 (Firefox ESR and similar).
+
+So the goal here is not "better than the old OneTab" — it is: **bring the old rendering discipline back
+(one node per row, nothing fancy) into MV3**, and add virtualization on top, which the old version never had.
+
+> Caveat: the 0.50 ms figure comes from a synthetic benchmark that reproduces the old DOM shape
+> (`dom_bench.html`), not from running old OneTab itself — it can no longer be installed. The point of a
+> synthetic benchmark is to isolate one variable (DOM shape) from favicons, script logic, and everything else.
+
 ## How this build avoids it
 
 | Constraint | Implementation |
@@ -115,7 +133,7 @@ them treats **render budget** as a first-class constraint:
 | [better-onetab](https://github.com/cnwangjie/better-onetab) | 1.7k★ **archived** | Vue, feature-rich (sync, config, DnD), last active 2018 |
 | [N-Tab](https://github.com/scoful/N-Tab) | 0.9k★ active | Chinese, feature-rich, Chrome/Edge |
 | [NiceTab](https://github.com/web-dahuyou/NiceTab) | 0.75k★ active | TS/React, currently the most complete (sync, themes, many import formats, DnD) |
-| [OneTab-Reborn](https://github.com/Nuzza/OneTab-Reborn) | 21★ | restyled fork of pre-2.0 OneTab |
+| [OneTab-Reborn](https://github.com/Nuzza/OneTab-Reborn) | 21★ | recreates the better old (pre-2.0) build — but it is `manifest_version: 2`, which current Chrome / Edge refuse to load |
 | [onetab (deobfuscated)](https://github.com/AltarBeastiful/onetab) | 58★ | official code, deobfuscated + extra shortcuts |
 
 The trade-off is honest:
