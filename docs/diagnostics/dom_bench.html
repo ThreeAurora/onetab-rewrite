@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>OneTab DOM 形态基准</title>
+<style>
+  body { font: 14px/1.6 "Segoe UI", "Microsoft YaHei", sans-serif; margin: 20px; }
+  h1 { font-size: 18px; }
+  table { border-collapse: collapse; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  td, th { border: 1px solid #bbb; padding: 5px 14px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  #status { color: #0a5; font-weight: 600; }
+  #stage { position: fixed; inset: 0; overflow: hidden; background: #fff; z-index: 1; }
+  #panel { position: relative; z-index: 2; background: #fff; max-height: 38vh; overflow-y: auto; }
+  .tab { border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12);
+         border: 1px solid #eee; height: 26px; position: relative; box-sizing: border-box; }
+  .tabInner { display: flex; align-items: center; gap: 6px; height: 100%; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="panel">
+  <h1>OneTab DOM 形态基准（在本机 Edge 中运行）</h1>
+  <p id="status">测试中，请勿切换标签页…</p>
+  <table id="tbl">
+    <thead><tr><th>DOM 形态</th><th>条目数</th><th>DOM 节点</th><th>HitTest/次 (ms)</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p style="color:#666">
+    complex = 新版条目形态（favicon + 按钮 + 2 个绝对定位图标 + 阴影圆角）<br>
+    noabs = 去掉绝对定位图标　noimg = 去掉 favicon　simple = 旧版形态（裸 &lt;a&gt;）
+  </p>
+</div>
+<script>
+function el(tag, cls, css) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (css) e.style.cssText = css;
+  return e;
+}
+function build(kind, n) {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < n; i++) {
+    if (kind === 'simple') {
+      const a = el('a', '', 'display:block;height:26px;line-height:26px');
+      a.textContent = 'item ' + i;
+      frag.appendChild(a);
+      continue;
+    }
+    const d = el('div', 'tab');
+    const inner = el('div', 'tabInner');
+    if (kind !== 'noimg') {
+      const pic = el('picture', 'lightDarkPicture');
+      pic.appendChild(el('img', 'lightDarkInnerImg', 'width:16px;height:16px'));
+      inner.appendChild(pic);
+    }
+    const a = el('a', 'tabLink tabLinkText');
+    a.textContent = 'item ' + i;
+    inner.appendChild(a);
+    inner.appendChild(el('div', 'tabMoreButton', 'width:16px;height:15px'));
+    if (kind !== 'noabs') {
+      inner.appendChild(el('img', 'tabCrossImg', 'position:absolute;top:4px;right:4px;width:16px;height:16px'));
+      inner.appendChild(el('img', 'tabTickImg', 'position:absolute;top:4px;right:24px;width:16px;height:16px'));
+    }
+    d.appendChild(inner);
+    frag.appendChild(d);
+  }
+  return frag;
+}
+function probe(n) {
+  const y0 = Math.round(window.innerHeight * 0.45);
+  const span = Math.max(60, window.innerHeight - y0 - 20);
+  const t0 = performance.now();
+  for (let i = 0; i < n; i++) document.elementFromPoint(600, y0 + (i % span));
+  return (performance.now() - t0) / n;
+}
+const KINDS = ['complex', 'noabs', 'noimg', 'simple'];
+const SIZES = [1000, 3838, 8000];
+
+(async () => {
+  const stage = document.getElementById('stage');
+  const tbody = document.querySelector('#tbl tbody');
+  const status = document.getElementById('status');
+  for (const size of SIZES) {
+    for (const kind of KINDS) {
+      stage.innerHTML = '';
+      stage.appendChild(build(kind, size));
+      await new Promise(r => setTimeout(r, 500));
+      const ms = probe(150);
+      const nodes = document.getElementsByTagName('*').length;
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + kind + '</td><td>' + size + '</td><td>' + nodes +
+                     '</td><td>' + ms.toFixed(2) + '</td>';
+      tbody.appendChild(tr);
+      status.textContent = '进行中：' + kind + ' @ ' + size;
+      await new Promise(r => setTimeout(r, 150));
+    }
+  }
+  stage.innerHTML = '';
+  status.textContent = '✓ 完成 —— 请把这张表截图发回';
+  window.__result = [...tbody.querySelectorAll('tr')]
+    .map(tr => [...tr.children].map(td => td.textContent).join('\t')).join('\n');
+})();
+</script>
+</body>
+</html>
